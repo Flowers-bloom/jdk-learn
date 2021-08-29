@@ -2,6 +2,9 @@ package main.java.priorityqueue;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.function.Consumer;
 
 /**
  * 优先队列
@@ -10,24 +13,23 @@ import java.util.Comparator;
  * 3. 对象数组存储元素，需实现扩容方式
  * 4. 通过堆维护元素顺序
  * 5. 先进先出，非双端队列
- *
- * <? extends E> 表示集合中的元素必须是 E 的子类
- * <? super E> 表示集合中的元素必须是 E 的父类
- * <E extends Comparable<? super E>> 表示 E 或者 E 的父类其中之一，必须实现 comparable 接口
+ * 6. 迭代器访问，和支持 foreach 遍历
+ * 7. fast-fail机制
  */
 @SuppressWarnings("unchecked")
-public class MyPriorityQueue<E extends Comparable<? super E>> {
+public class MyPriorityQueue<E extends Comparable<? super E>> implements Iterable<E> {
     private transient Object[] queue;
     private final Comparator<E> comparator;
     private static final int DEFAULT_CAPACITY = 6;
     private int cap;
     private int size;
+    private int modCount; // fast-fail
 
     /**
      * 初始化
      *
-     * @param initialCap
-     * @param comparator
+     * @param initialCap 初始化容量
+     * @param comparator 比较器
      */
     public MyPriorityQueue(int initialCap, Comparator<E> comparator) {
         cap = initialCap;
@@ -70,8 +72,9 @@ public class MyPriorityQueue<E extends Comparable<? super E>> {
 
     /**
      * 向上调整
-     * @param i
-     * @param e
+     *
+     * @param i 调整的元素下标
+     * @param e 调整的元素值
      */
     private void siftUp(int i, E e) {
         while (i > 0) {
@@ -87,8 +90,9 @@ public class MyPriorityQueue<E extends Comparable<? super E>> {
 
     /**
      * 向下调整
-     * @param i
-     * @param e
+     *
+     * @param i 调整的元素下标
+     * @param e 调整的元素值
      */
     private void siftDown(int i, E e) {
         int half = size >> 1; // only need to traverse non-leaf node
@@ -108,18 +112,58 @@ public class MyPriorityQueue<E extends Comparable<? super E>> {
     }
 
     public boolean offer(E e) {
-        if (size == cap)
+        if (e == null)
+            throw new NullPointerException();
+        modCount++;
+        int i = size;
+        if (i == cap)
             grow();
-        siftUp(size, e);
+        siftUp(i, e);
         size++;
         return true;
     }
 
     public E poll() {
-        Object result = queue[0];
-        Object e = queue[--size];
-        queue[size] = null;
-        siftDown(0, (E) e);
+        final Object result;
+        if ((result = queue[0]) != null) {
+            modCount++;
+            Object e = queue[--size];
+            queue[size] = null;
+            siftDown(0, (E) e);
+        }
         return (E) result;
+    }
+
+    public E peek() {
+        return (E) queue[size - 1];
+    }
+
+    private final class Itr implements Iterator<E> {
+        private int cur;
+        private final int expectedModCount;
+
+        Itr(int size, int modCount) {
+            cur = size;
+            expectedModCount = modCount;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cur > 0;
+        }
+
+        @Override
+        public E next() {
+            if (expectedModCount != modCount)
+                throw new ConcurrentModificationException();
+            return (E) queue[--cur];
+        }
+    }
+
+    /**
+     * @return 迭代器
+     */
+    public Iterator<E> iterator() {
+        return new Itr(size, modCount);
     }
 }

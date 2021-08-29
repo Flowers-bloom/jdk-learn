@@ -1,9 +1,6 @@
 package main.java.priorityqueue;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.Random;
+import java.util.*;
 
 public class Test {
     private final Comparator<Integer> comparator = ((o1, o2) -> o2 - o1);
@@ -20,10 +17,6 @@ public class Test {
             q.offer(num);
         }
         System.out.println();
-
-        while (!q.isEmpty()) {
-            System.out.print(q.poll() + " ");
-        }
     }
 
     public boolean isGreaterChild(int i) {

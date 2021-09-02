@@ -98,7 +98,6 @@ public class SingleTimeWheel {
                 }
             }
         } catch (InterruptedException e) {
-            executor.shutdown();
             System.out.println("SingleTimeWheel run thread exit, error: " + e);
         } finally {
             executor.shutdown();

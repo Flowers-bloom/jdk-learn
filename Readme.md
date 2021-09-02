@@ -49,3 +49,29 @@ Ref: https://docs.oracle.com/javase/
 
 （2）多级时间轮下，始末时刻需要加载未来一小时或者一天的数据会导致延迟以及内存可能不够的问题   
 可以考虑在时刻到来之前对数据进行**预加载**，并且只**加载未来的一部分数据**，从而避免加载延迟和内存不够的问题。
+
+### 3、Reactor
+
+**功能点**
+- 顺带实现了 `Bio Server` 和 `Nio Server`
+- 实现了单 `Reactor` 多线程模型和多 `Reactor` 多线程模型
+- 简单池化 `ByteBuffer` 对象
+
+**收获**
+（1）`Java`自带的`ByteBuffer`写入数据之后，读取数据前注意先`flip to reset read postion`，否则容易发生`BufferOverflowException`
+```java
+public class Test {
+    public static void main(String[] args) throws IOException {
+        FileChannel fc = new FileInputStream("Readme.md").getChannel();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        fc.read(buffer);
+        buffer.flip(); // reset position, otherwise cannot read anyone
+        while (buffer.hasRemaining()) {
+            System.out.println((char)buffer.get());
+        }
+        
+        // or other method to get data
+        // channel.write(ByteBuffer.wrap(str.getBytes()));
+    }
+}
+```

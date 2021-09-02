@@ -122,7 +122,6 @@ public class MultiTimeWheel {
                 }
             }
         } catch (InterruptedException e) {
-            executor.shutdown();
             System.out.println("MultiTimeWheel run thread exit, error: " + e);
         } finally {
             executor.shutdown();

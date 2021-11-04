@@ -80,3 +80,11 @@ public class Test {
 
 异步计算，目前仅支持异步执行和回调。
 
+
+### 5、NettyExample
+
+实现 Netty Pipeline 处理器结构和异步回调逻辑。
+
+todo list:
+- 实现一个 ByteBuf 代替 ByteBuffer
+- 异步回调问题，还未实现线程通信机制

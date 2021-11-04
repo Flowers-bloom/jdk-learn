@@ -20,11 +20,11 @@ public class NioServer {
         try {
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(false); // non-blocking mode
+            Selector selector = Selector.open();
+            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT); // Selector注册感兴趣的Accept操作
             InetSocketAddress address = new InetSocketAddress(ADDRESS, PORT);
             serverSocketChannel.bind(address);
             System.out.println("nio server bind " + address);
-            Selector selector = Selector.open();
-            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT); // Selector注册感兴趣的Accept操作
 
             // 处理连接和读写事件
             for (;;) {
@@ -42,10 +42,12 @@ public class NioServer {
                     }else if (key.isReadable()) {
                         // 读写请求
                         SocketChannel socketChannel = (SocketChannel) key.channel();
+                        buffer.clear();
                         int n = socketChannel.read(buffer);
                         if (n != -1) {
-                            String str = "[NIO] " + new String(buffer.array()).trim();
-                            socketChannel.write(ByteBuffer.wrap(str.getBytes()));
+                            buffer.flip();
+                            System.out.println("[server] " + new String(buffer.array()));
+                            socketChannel.write(buffer);
                         }else {
                             socketChannel.close();
                         }

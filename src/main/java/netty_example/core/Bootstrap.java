@@ -20,7 +20,10 @@ public class Bootstrap {
 
     public ChannelFuture connect(String address, int port) {
         ChannelFuture future = new ChannelFuture();
-        doConnect(address, port, future);
+        Thread connectThread = new Thread(() -> {
+            doConnect(address, port, future);
+        });
+        connectThread.start();
         return future;
     }
 
@@ -32,7 +35,7 @@ public class Bootstrap {
             socketChannel.connect(new InetSocketAddress(address, port));
 
             for (;;) {
-                selector.select(); // select 必须在主线程，否则会阻塞
+                selector.select(); // select 必须和 socket 操作在同一个线程，否则会阻塞
                 Iterator<SelectionKey> it = selector.selectedKeys().iterator();
                 while (it.hasNext()) {
                     SelectionKey key = it.next();
@@ -45,6 +48,7 @@ public class Bootstrap {
                         channel = new Channel(socket, initializer.getPipeline());
                         initializer.init();
                         initializer.getPipeline().setChannel(channel);
+
                         // future callback
                         future.setChannel(channel);
                         future.callbackListener();

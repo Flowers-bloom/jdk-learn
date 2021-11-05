@@ -36,6 +36,7 @@ public class ChannelPipeline {
         if (ctx == null)
             throw new RuntimeException("handler is empty!");
 
+        ctx.fireChannelActive();
         ctx.fireChannelRead(msg);
     }
 

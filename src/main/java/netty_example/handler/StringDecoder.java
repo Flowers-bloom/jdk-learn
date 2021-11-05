@@ -15,6 +15,5 @@ public class StringDecoder extends BaseDecoder<ByteBuffer> {
         buffer.flip();
         String str = new String(buffer.array());
         out.add(str.trim());
-        System.out.println("decoder: " + str);
     }
 }

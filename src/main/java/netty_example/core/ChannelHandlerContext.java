@@ -29,8 +29,8 @@ public class ChannelHandlerContext {
         return handler;
     }
 
-    public void fireChannelActive(ChannelHandlerContext ctx) {
-        next.handler.channelActive(ctx);
+    public void fireChannelActive() {
+        next.handler.channelActive(next);
     }
 
     public void fireChannelRead(Object msg) {

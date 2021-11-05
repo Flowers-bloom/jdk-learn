@@ -83,8 +83,7 @@ public class Test {
 
 ### 5、NettyExample
 
-实现 Netty Pipeline 处理器结构和异步回调逻辑。
+实现 Netty Pipeline 处理器结构和简单回调逻辑。
 
-todo list:
-- 实现一个 ByteBuf 代替 ByteBuffer
-- 异步回调问题，还未实现线程通信机制
+经验：
+Selector.select() 操作必须和 socket 操作在同一个线程，否则监听的事件一直为空

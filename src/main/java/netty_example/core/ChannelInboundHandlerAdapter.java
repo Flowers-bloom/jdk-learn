@@ -14,7 +14,9 @@ public class ChannelInboundHandlerAdapter implements ChannelInboundHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        ctx.fireChannelActive(ctx);
+        if (ctx.getNext() != null) {
+            ctx.fireChannelActive();
+        }
     }
 
     @Override

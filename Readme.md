@@ -87,3 +87,5 @@ public class Test {
 
 经验：
 Selector.select() 操作必须和 socket 操作在同一个线程，否则监听的事件一直为空
+
+![UML类图](https://z3.ax1x.com/2021/11/05/IumEQI.png)

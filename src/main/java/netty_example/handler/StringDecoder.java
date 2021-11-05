@@ -1,12 +1,12 @@
 package main.java.netty_example.handler;
 
-import main.java.netty_example.core.BaseDecoder;
+import main.java.netty_example.core.AbstractDecoder;
 import main.java.netty_example.core.ChannelHandlerContext;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-public class StringDecoder extends BaseDecoder<ByteBuffer> {
+public class StringDecoder extends AbstractDecoder<ByteBuffer> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuffer buffer, List<Object> out) {

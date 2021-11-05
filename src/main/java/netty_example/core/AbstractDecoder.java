@@ -3,7 +3,7 @@ package main.java.netty_example.core;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseDecoder<I> extends ChannelInboundHandlerAdapter {
+public abstract class AbstractDecoder<I> extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {

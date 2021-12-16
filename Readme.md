@@ -76,12 +76,26 @@ public class Test {
 }
 ```
 
-### 4、Stream
+### 4、Async
+
+异步计算，目前仅支持异步执行和回调。
+
+
+### 5、NettyExample
+
+实现 Netty Pipeline 处理器结构和简单回调逻辑。
+
+经验：
+Selector.select() 操作必须和 socket 操作在同一个线程，否则监听的事件一直为空
+
+![UML类图](https://z3.ax1x.com/2021/11/05/IumEQI.png)
+
+### 6、Stream
 
 学习 Java8 Stream 特性：创建Stream；Stream使用，包括转换和聚合。
 
 有两个注意点：
 
-1.stream转换操作执行时只是声明一个转换规则，并不会对元素实时计算。只有到聚合操作时，才会回溯前面的规则对元素进行计算。  
+1.stream转换操作执行时只是声明一个转换规则，并不会对元素实时计算。只有到聚合操作时，才会回溯前面的规则对元素进行计算。
 
 2.stream实例聚合之后就会被close，所以每一个stream实例只能被聚合一次，如果要继续使用相同元素的stream，就需要重新创建一个stream。

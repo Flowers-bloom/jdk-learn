@@ -6,7 +6,10 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 import java.util.Scanner;
 
 /**
@@ -18,7 +21,7 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client();
-        client.startSocketClient();
+        client.startSocketChannelClient();
         System.out.println("end of main");
     }
 
@@ -26,27 +29,56 @@ public class Client {
         try {
             SocketChannel socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
+            Selector selector = Selector.open();
+            socketChannel.register(selector, SelectionKey.OP_CONNECT);
             InetSocketAddress address = new InetSocketAddress(ADDRESS, PORT);
-            boolean connected = socketChannel.connect(address);
-            while (!connected) {
-                connected = socketChannel.finishConnect();
+            socketChannel.connect(address);
+
+            for (;;) {
+                selector.select();
+
+                Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+                while (it.hasNext()) {
+                    SelectionKey key = it.next();
+                    if (key.isConnectable()) {
+                        SocketChannel channel = (SocketChannel) key.channel();
+                        if (channel.isConnectionPending()) {
+                            channel.finishConnect();
+                            System.out.println("client connected success");
+                        }
+                        channel.configureBlocking(false);
+                        socketChannel.register(selector, SelectionKey.OP_READ);
+
+                        openChannelWriter(channel);
+                    }else if (key.isReadable()) {
+                        SocketChannel channel = (SocketChannel) key.channel();
+                        openChannelReader(channel);
+                    }
+                    it.remove();
+                }
             }
-            System.out.println("connected to remote " + socketChannel.getRemoteAddress());
-            openChannelReader(socketChannel);
-            System.out.println("opened reader");
-            Scanner sc = new Scanner(System.in);
-            String in = sc.nextLine();
-            while (!in.equals("exit")) {
-                ByteBuffer buffer = ByteBuffer.allocate(1024);
-                buffer.put(in.getBytes());
-                buffer.flip();
-                socketChannel.write(buffer); // read data from buffer
-                in = sc.nextLine();
-            }
-            socketChannel.close(); // close channel
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void openChannelWriter(SocketChannel channel) {
+        Thread writer = new Thread(() -> {
+            try {
+                Scanner sc = new Scanner(System.in);
+                String in = sc.nextLine();
+                while (!in.equals("exit")) {
+                    ByteBuffer buffer = ByteBuffer.allocate(1024);
+                    buffer.put(in.getBytes());
+                    buffer.flip();
+                    channel.write(buffer); // read data from buffer
+                    in = sc.nextLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        writer.start();
     }
 
     private void openChannelReader(SocketChannel channel) {
@@ -54,10 +86,11 @@ public class Client {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(1024);
                 for (;;) {
+                    buffer.clear();
                     int n = channel.read(buffer);
                     if (n > 0) {
-                        System.out.println(new String(buffer.array()).trim());
-                        buffer.clear();
+                        byte[] bytes = buffer.array();
+                        System.out.println("[NIO] " + new String(bytes, 0, n).trim());
                     }
                 }
             } catch (IOException e) {

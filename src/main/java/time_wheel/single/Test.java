@@ -1,6 +1,6 @@
-package main.java.timewheel.single;
+package main.java.time_wheel.single;
 
-import main.java.timewheel.TimeTask;
+import main.java.time_wheel.TimeTask;
 
 import java.io.IOException;
 import java.time.LocalTime;

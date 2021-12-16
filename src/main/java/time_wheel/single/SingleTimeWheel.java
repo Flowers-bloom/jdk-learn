@@ -1,7 +1,7 @@
-package main.java.timewheel.single;
+package main.java.time_wheel.single;
 
-import main.java.timewheel.HashedWheelBucket;
-import main.java.timewheel.TimeTask;
+import main.java.time_wheel.HashedWheelBucket;
+import main.java.time_wheel.TimeTask;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

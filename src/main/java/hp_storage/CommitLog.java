@@ -14,13 +14,21 @@ import java.util.concurrent.TimeUnit;
 public class CommitLog {
     static final String ROOT_PATH = System.getProperty("user.dir") + "/commit-log/";
     static final int DIGIT = 5;
-    static final ScheduledExecutorService SCHEDULE_SERVICE = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+    static final ScheduledExecutorService SCHEDULE_FLUSH_SERVICE = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
             return new Thread(r, "CommitLogScheduleFlushThread");
         }
     });
+    static final ScheduledExecutorService SCHEDULED_CLEAN_FILE_SERVICE = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "CommitLogScheduledCleanFileThread");
+        }
+    });
     static final int FLUSH_GAP_SECOND = 5;
+    static final int CLEAN_FILE_GAP_SECOND = 6;
+    static final int CLEAN_THRESHOLD = 3600 * 24;
     List<MappedFile> mappedFileQueue = new LinkedList<>();
     MappedFile mappedFile;
     int offset;
@@ -37,7 +45,7 @@ public class CommitLog {
 
         tryWriteSomeMsg(commitLog);
         try {
-            Thread.sleep(5000);
+            Thread.sleep(6000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -61,6 +69,7 @@ public class CommitLog {
             mappedFile = new MappedFile(getNextMappedFileName(offset));
         }
         startScheduledFlushTask();
+        startScheduledCleanFileTask();
     }
 
     public String getNextMappedFileName(int offset) {
@@ -103,13 +112,28 @@ public class CommitLog {
     }
 
     private void startScheduledFlushTask() {
-        SCHEDULE_SERVICE.scheduleAtFixedRate(() -> {
+        SCHEDULE_FLUSH_SERVICE.scheduleAtFixedRate(() -> {
             this.mappedFile.flush();
         }, FLUSH_GAP_SECOND, FLUSH_GAP_SECOND, TimeUnit.SECONDS);
         System.out.println("CommitLog schedule flush task start success");
     }
 
+    private void startScheduledCleanFileTask() {
+        SCHEDULED_CLEAN_FILE_SERVICE.scheduleAtFixedRate(() -> {
+            int i = 0;
+            MappedFile mf = this.mappedFileQueue.get(i);
+            while (System.currentTimeMillis() - mf.file.lastModified() > CLEAN_THRESHOLD) {
+                boolean delete = mf.file.delete();
+                System.out.println("SCHEDULED_CLEAN_FILE_SERVICE: " + mf.filename + " delete " + (delete ? "success" : "failed"));
+                this.mappedFileQueue.remove(mf);
+                mf = this.mappedFileQueue.get(++i);
+            }
+        }, CLEAN_FILE_GAP_SECOND, CLEAN_FILE_GAP_SECOND, TimeUnit.SECONDS);
+        System.out.println("CommitLog schedule clean file task start success");
+    }
+
     public void release() {
-        SCHEDULE_SERVICE.shutdown();
+        SCHEDULE_FLUSH_SERVICE.shutdownNow();
+        SCHEDULED_CLEAN_FILE_SERVICE.shutdownNow();
     }
 }

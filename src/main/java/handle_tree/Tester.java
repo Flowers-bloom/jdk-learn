@@ -1,113 +1,97 @@
 package main.java.handle_tree;
 
-import java.util.ArrayList;
-import java.util.List;
+import main.java.handle_tree.core.Handler;
+import main.java.handle_tree.core.Router;
+import main.java.handle_tree.request.Request;
+import main.java.handle_tree.request.v1.V1Request;
+import main.java.handle_tree.request.v2.V2Request;
+import main.java.handle_tree.result.Result;
+import main.java.handle_tree.result.v1.V1Result;
+import main.java.handle_tree.result.v2.V2Result;
 
 public class Tester {
     public static void main(String[] args) {
         Root root = new Root();
+        System.out.println("v1 t1");
+        V1Request v1Request = new V1Request();
+        v1Request.setType(Request.T1);
+        Result v1Result = root.apply(v1Request);
+        System.out.println(v1Result);
 
-        System.out.println("version: 1,  param: s1");
-        Request req1 = new Request();
-        req1.setVersion(1);
-        req1.setParam("s1");
-        Result r1 = root.apply(req1);
-        System.out.println(r1);
+        System.out.println("v1 t2");
+        V1Request v1Request2 = new V1Request();
+        v1Request2.setType(Request.T2);
+        Result v1Result2 = root.apply(v1Request2);
+        System.out.println(v1Result2);
 
-        System.out.println("version: 1,  param: s2");
-        Request req11 = new Request();
-        req11.setVersion(1);
-        req11.setParam("s2");
-        Result r11 = root.apply(req11);
-        System.out.println(r11);
+        System.out.println("v2 t1");
+        V2Request v2Request = new V2Request();
+        v2Request.setType(Request.T1);
+        Result v2Result = root.apply(v2Request);
+        System.out.println(v2Result);
 
-        System.out.println("version: 2,  param: s1");
-        Request req2 = new Request();
-        req2.setVersion(2);
-        req2.setParam("s1");
-        Result r2 = root.apply(req2);
-        System.out.println(r2);
-
-        System.out.println("version: 2,  param: s2");
-        Request req3 = new Request();
-        req3.setVersion(2);
-        req3.setParam("s2");
-        Result r3 = root.apply(req3);
-        System.out.println(r3);
-
-        System.out.println("version: 0,  param: s1");
-        Request req4 = new Request();
-        req4.setVersion(0);
-        req4.setParam("s1");
-        Result r4 = root.apply(req4);
-        System.out.println(r4);
+        System.out.println("v2 t2");
+        V2Request v2Request2 = new V2Request();
+        v2Request2.setType(Request.T2);
+        Result v2Result2 = root.apply(v2Request2);
+        System.out.println(v2Result2);
     }
 
-    public static class Root extends AbstractRouter {
-
+    public static class Root extends Router {
         @Override
-        protected List<Handler> registerNode() {
-            List<Handler> nodeList = new ArrayList<>();
-            nodeList.add(new V2Router());
-            nodeList.add(new V1DefaultHandler());
-            return nodeList;
+        protected Handler getHandler(Request request) {
+            if (Request.VERSION1 == request.getVersion() && Request.T1.equals(request.getType())) {
+                return new V1Handler();
+            }else if (Request.VERSION2 == request.getVersion()) {
+                return new V2Router();
+            }
+            return null;
         }
     }
 
-    public static class V2Router extends AbstractRouter {
-        @Override
-        public Boolean isMatch(Request request) {
-            return request.getVersion() == 2;
-        }
+    public static class V2Router extends Router {
 
         @Override
-        protected List<Handler> registerNode() {
-            List<Handler> nodeList = new ArrayList<>();
-            nodeList.add(new V2S1Handler());
-            nodeList.add(new V2S2Handler());
-            return nodeList;
-        }
-    }
-
-    public static class V1DefaultHandler implements Handler {
-
-        @Override
-        public Boolean isMatch(Request request) {
-            return request.getVersion() == 1;
-        }
-
-        @Override
-        public Result execHandle(Request request) {
-            System.out.println("V1DefaultHandler exec");
-            return new Result("v1 result");
+        protected Handler getHandler(Request request) {
+            if (request.getVersion() != Request.VERSION2) {
+                return null;
+            }
+            if (Request.T1.equals(request.getType())) {
+                return new V2T1Handler();
+            }else if (Request.T2.equals(request.getType())) {
+                return new V2T2Handler();
+            }
+            return null;
         }
     }
 
-    public static class V2S1Handler implements Handler {
+    public static class V1Handler implements Handler {
 
         @Override
-        public Boolean isMatch(Request request) {
-            return request.getVersion() == 2 && "s1".equals(request.getParam());
-        }
-
-        @Override
-        public Result execHandle(Request request) {
-            System.out.println("V2S1Handler exec");
-            return new Result("v2s1 result");
+        public Result exec(Request request) {
+            V1Result result = new V1Result();
+            result.setInfo("V1Handler");
+            return result;
         }
     }
 
-    public static class V2S2Handler implements Handler {
+    public static class V2T1Handler implements Handler {
 
         @Override
-        public Boolean isMatch(Request request) {
-            return request.getVersion() == 2 && "s2".equals(request.getParam());
+        public Result exec(Request request) {
+            V2Result result = new V2Result();
+            result.setInfo("V2T1Handler");
+            return result;
         }
+    }
+
+    public static class V2T2Handler implements Handler {
 
         @Override
-        public Result execHandle(Request request) {
-            System.out.println("V2S2Handler exec");
-            return new Result("v2s2 result");
+        public Result exec(Request request) {
+            V2Result result = new V2Result();
+            result.setInfo("V2T1Handler");
+            return result;
         }
     }
 }

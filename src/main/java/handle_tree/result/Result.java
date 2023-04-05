@@ -1,11 +1,7 @@
-package main.java.handle_tree;
+package main.java.handle_tree.result;
 
 public class Result {
     private String info;
-
-    public Result(String info) {
-        this.info = info;
-    }
 
     public String getInfo() {
         return info;
